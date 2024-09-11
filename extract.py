@@ -34,7 +34,7 @@ def extract_data(raw):
             transcripts = []
             transcript_tags = tds[2].find_all("p")
             for tag in transcript_tags:
-                transcripts.append(tag.get_text(strip=True))
+                transcripts.extend(tag.get_text(strip=True, separator="\n").splitlines())
 
             ## Generate Dictionary and get urls
             file_urls = []
@@ -67,12 +67,16 @@ def download_file(urls):
 
     for url in urls:
         filename = url.split('/')[-1]
+        name = filename.split(".")[0]
+        filepath = os.path.join(out_dir, f"{name}.wav")
+        if os.path.exists(filepath): continue
+
         print(f'Downloading {filename}...')
         r = requests.get(url, headers=headers)
         r.raise_for_status()
         print("Success.")
 
-        out_path = os.path.join(out_dir, "{}.wav".format(filename.split(".")[0]))
+        out_path = os.path.join(out_dir, f"{filename.split('.')[0]}.wav")
         print(f'Converting {filename} to .wav')
         convert_to_wav_and_store_it(BytesIO(r.content), out_path)
 
@@ -85,13 +89,14 @@ def generate_train_and_val_dataset(data, speaker_id, chara_name, ratio=0.7):
     train_data = dict(items[:split_idx])
     val_data = dict(items[split_idx:])
 
-    with open(f'{chara_name}_train.txt', 'w') as f:
+    with open(f'{chara_name}_train.txt', 'w', encoding='utf-8') as f:
         for key, value in train_data.items():
             f.write(f'{key}|{speaker_id}|{value}\n')
 
-    with open(f'{chara_name}_val.txt', 'w') as f:
+    with open(f'{chara_name}_val.txt', 'w', encoding='utf-8') as f:
         for key, value in val_data.items():
             f.write(f'{key}|{speaker_id}|{value}\n')
+
     print("Success")
 
 
