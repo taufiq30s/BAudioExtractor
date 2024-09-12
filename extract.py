@@ -18,7 +18,7 @@ def get_webpage(url):
     print("Success")
     return BeautifulSoup(res.text, 'html.parser')
 
-def extract_data(raw):
+def extract_data(raw, path):
     print("Extracting audio urls and transcripts")
     res = {}
     urls = []
@@ -45,10 +45,10 @@ def extract_data(raw):
 
             if len(file_urls) > 1:
                 for i in range(len(file_urls)):
-                    res[file_urls[i].split('/')[-1].replace('ogg.mp3', 'wav')] = transcripts[i] if len(transcripts) > 0 else ""
+                    res[f"{path}/{file_urls[i].split('/')[-1].replace('ogg.mp3', 'wav')}"] = transcripts[i] if len(transcripts) > 0 else ""
                     urls.append(f'https:{file_urls[i]}')
             else:
-                res[file_urls[0].split('/')[-1].replace('ogg.mp3', 'wav')] = " ".join(transcripts) if len(transcripts) > 0 else ""
+                res[f"{path}/{file_urls[0].split('/')[-1].replace('ogg.mp3', 'wav')}"] = " ".join(transcripts) if len(transcripts) > 0 else ""
                 urls.append(f'https:{file_urls[0]}')
     return res, urls
 
@@ -96,23 +96,23 @@ def generate_train_and_val_dataset(data, speaker_id, chara_name, ratio=0.7):
     with open(f'{chara_name}_val.txt', 'w', encoding='utf-8') as f:
         for key, value in val_data.items():
             f.write(f'{key}|{speaker_id}|{value}\n')
-
     print("Success")
 
-
-
 def main():
-    parser = argparse.ArgumentParser(description="Scrap audio and japanese transcription from Blue Archive Wiki and generate dataset for Vits Model.")
-    parser.add_argument('url', help='Blue Archive Wiki Audio url. (example: https://bluearchive.wiki/wiki/Ibuki/audio)')
-    parser.add_argument('--id', type=int, default=11, help='Speaker id that will be added at dataset (default: 11)')
-    parser.add_argument('--ratio', type=float, default=0.7, help='Ratio for the split (default: 0.7)')
-    parser.add_argument('--character_name', default="ibuki", help='Character that will be added at dataset (default: ibuki)')
+    parser = argparse.ArgumentParser(
+        description="Generate VITS training data by Scrape and extract Japanese audio files and transcripts from Blue Archive Wiki"
+    )
+    parser.add_argument('url', help='Blue Archive Wiki Audio URL. (example: https://bluearchive.wiki/wiki/Ibuki/audio)')
+    parser.add_argument('-id', type=int, default=10, help='ID of the speaker to be added to the dataset (default: 10)')
+    parser.add_argument('-r', '--ratio', type=float, default=0.7, help='Ratio for the split (default: 0.7)')
+    parser.add_argument('-name', '--character_name', default="ibuki", help='Character that will be added at dataset (default: ibuki)')
+    parser.add_argument('--path', default="/content/MyDrive/datasets", help='Set root path of audio that will be added in dataset. (default: "/content/MyDrive/datasets")')
 
     args = parser.parse_args()
 
-    print("Blue Archive Wiki Audio Scraper")
+    print("Blue Archive VITS Extractor")
     raw = get_webpage(args.url)
-    data, urls = extract_data(raw)
+    data, urls = extract_data(raw, args.path.rstrip("/"))
     download_file(urls)
     generate_train_and_val_dataset(data, args.id, args.character_name, args.ratio)
     print("Done")
