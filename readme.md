@@ -37,7 +37,7 @@ pip install -r requirements.txt
 ## Usage
 
 ```bash
-python3 -m extract.py -id 10 -r 0.7 -name "ibuki" -path "/dataset/ibuki" url
+python3 -m extract.py -id 10 -r 0.7 -name "ibuki" --path "/dataset/ibuki" url
 ```
 
 - `-id` `--id` ID of the speaker that will be added to the dataset (Default: 10).
